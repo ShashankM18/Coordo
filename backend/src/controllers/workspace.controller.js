@@ -4,6 +4,7 @@ import User from '../models/User.model.js';
 import Project from '../models/Project.model.js';
 import { sendWorkspaceInviteEmail } from '../utils/email.utils.js';
 import { logActivity } from '../utils/activityLog.utils.js';
+import { emitToWorkspace } from '../sockets/index.js';
 import slugify from 'slugify';
 
 // ── GET all workspaces for current user ────────────────────────────────────────
@@ -72,6 +73,8 @@ export const updateWorkspace = async (req, res, next) => {
     allowed.forEach(f => { if (req.body[f] !== undefined) workspace[f] = req.body[f]; });
     await workspace.save();
 
+    emitToWorkspace(req.app.get('io'), workspace._id.toString(), 'workspace:updated', { workspaceId: workspace._id.toString() });
+
     res.json({ success: true, workspace });
   } catch (err) { next(err); }
 };
@@ -93,6 +96,9 @@ export const updateMemberRole = async (req, res, next) => {
 
     member.role = role;
     await workspace.save();
+    
+    emitToWorkspace(req.app.get('io'), workspace._id.toString(), 'workspace:updated', { workspaceId: workspace._id.toString() });
+
     res.json({ success: true, message: 'Role updated' });
   } catch (err) { next(err); }
 };
@@ -110,6 +116,9 @@ export const removeMember = async (req, res, next) => {
 
     workspace.members = workspace.members.filter(m => m.user.toString() !== req.params.userId);
     await workspace.save();
+    
+    emitToWorkspace(req.app.get('io'), workspace._id.toString(), 'workspace:updated', { workspaceId: workspace._id.toString() });
+
     res.json({ success: true, message: 'Member removed' });
   } catch (err) { next(err); }
 };

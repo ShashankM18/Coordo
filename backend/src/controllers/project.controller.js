@@ -49,10 +49,11 @@ export const getProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id)
       .populate('owner', 'name email avatar')
-      .populate('members.user', 'name email avatar lastSeen');
+      .populate('members.user', 'name email avatar lastSeen')
+      .populate('workspace');
 
     if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
-    if (!project.isMember(req.user._id)) {
+    if (!project.workspace.isMember(req.user._id)) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
@@ -87,9 +88,9 @@ export const createProject = async (req, res, next) => {
 // ── UPDATE project ─────────────────────────────────────────────────────────────
 export const updateProject = async (req, res, next) => {
   try {
-    const project = await Project.findById(req.params.id);
+    const project = await Project.findById(req.params.id).populate('workspace');
     if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
-    if (!project.isMember(req.user._id)) {
+    if (!project.workspace.isMember(req.user._id)) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
@@ -133,8 +134,8 @@ export const deleteProject = async (req, res, next) => {
 // ── GET project stats ─────────────────────────────────────────────────────────
 export const getProjectStats = async (req, res, next) => {
   try {
-    const project = await Project.findById(req.params.id);
-    if (!project || !project.isMember(req.user._id)) {
+    const project = await Project.findById(req.params.id).populate('workspace');
+    if (!project || !project.workspace.isMember(req.user._id)) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 

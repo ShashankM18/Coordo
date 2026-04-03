@@ -7,7 +7,6 @@ import { useWorkspaceStore } from '@store/workspace.store';
 import { useChatStore } from '@store/chat.store';
 import { taskAPI } from '@api/index';
 import CreateTaskModal from '@components/tasks/CreateTaskModal';
-import InviteBell from '@components/common/InviteBell';
 
 export default function Topbar() {
   const { user } = useAuthStore();
@@ -126,8 +125,6 @@ export default function Topbar() {
             <MessageSquare size={20} />
           </button>
         )}
-
-        <InviteBell />
 
         {/* Notifications bell */}
         {/* <button

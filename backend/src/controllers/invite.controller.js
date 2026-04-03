@@ -2,6 +2,7 @@ import Invite from '../models/Invite.model.js';
 import Workspace from '../models/Workspace.model.js';
 import User from '../models/User.model.js';
 import { logActivity } from '../utils/activityLog.utils.js';
+import { emitToWorkspace } from '../sockets/index.js';
 
 // ── CREATE Invite ──────────────────────────────────────────────────────────────
 export const createInvite = async (req, res, next) => {
@@ -109,6 +110,8 @@ export const acceptInvite = async (req, res, next) => {
       workspace: workspace._id,
       description: `${req.user.name} joined workspace via In-App invite`,
     });
+
+    emitToWorkspace(req.app.get('io'), workspace._id.toString(), 'workspace:updated', { workspaceId: workspace._id.toString() });
 
     res.json({ success: true, message: 'You successfully joined the workspace!', workspace });
   } catch (err) {

@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import { useAuthStore } from '@store/auth.store';
 import { useTaskStore } from '@store/task.store';
 import { useNotificationStore } from '@store/notification.store';
+import { useWorkspaceStore } from '@store/workspace.store';
 import toast from 'react-hot-toast';
 import { SOCKET_URL } from '../config/api';
 
@@ -31,7 +32,12 @@ export const useSocket = () => {
     socket.on('task:updated', (task) => useTaskStore.getState().syncTaskUpdate(task));
     socket.on('task:created', (task) => useTaskStore.getState().syncNewTask(task));
     socket.on('task:deleted', ({ taskId }) => useTaskStore.getState().syncDeleteTask(taskId));
-    socket.on('tasks:reordered', () => {}); // stores handle optimistic, no-op here
+    socket.on('tasks:reordered', ({ projectId }) => {
+      // When tasks are reordered by another user, refetch to sync all positions correctly
+      if (projectId) {
+        useTaskStore.getState().fetchTasks(projectId);
+      }
+    });
 
     // Live notifications
     socket.on('notification:new', (notif) => {
@@ -43,12 +49,22 @@ export const useSocket = () => {
       });
     });
 
+    // Workspace sync
+    socket.on('workspace:updated', ({ workspaceId }) => {
+      const wsStore = useWorkspaceStore.getState();
+      if (wsStore.currentWorkspace?._id === workspaceId) {
+        wsStore.fetchWorkspace(workspaceId);
+      }
+      wsStore.fetchWorkspaces();
+    });
+
     return () => {
       socket.off('task:updated');
       socket.off('task:created');
       socket.off('task:deleted');
       socket.off('tasks:reordered');
       socket.off('notification:new');
+      socket.off('workspace:updated');
     };
   }, [isAuthenticated, token]);
 

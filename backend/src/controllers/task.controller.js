@@ -43,8 +43,8 @@ export const getTasks = async (req, res, next) => {
     const { project } = req.query;
     if (!project) return res.status(400).json({ success: false, message: 'project query required' });
 
-    const proj = await Project.findById(project);
-    if (!proj || !proj.isMember(req.user._id)) {
+    const proj = await Project.findById(project).populate('workspace');
+    if (!proj || !proj.workspace.isMember(req.user._id)) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
@@ -85,8 +85,8 @@ export const createTask = async (req, res, next) => {
     const { title, description, project, status = 'todo', priority = 'medium',
       assignees = [], dueDate, tags } = req.body;
 
-    const proj = await Project.findById(project);
-    if (!proj || !proj.isMember(req.user._id)) {
+    const proj = await Project.findById(project).populate('workspace');
+    if (!proj || !proj.workspace.isMember(req.user._id)) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
@@ -144,8 +144,8 @@ export const updateTask = async (req, res, next) => {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
 
-    const proj = await Project.findById(task.project);
-    if (!proj || !proj.isMember(req.user._id)) {
+    const proj = await Project.findById(task.project).populate('workspace');
+    if (!proj || !proj.workspace.isMember(req.user._id)) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
@@ -192,8 +192,8 @@ export const updateTaskDependencies = async (req, res, next) => {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
 
-    const proj = await Project.findById(task.project);
-    if (!proj || !proj.isMember(req.user._id)) {
+    const proj = await Project.findById(task.project).populate('workspace');
+    if (!proj || !proj.workspace.isMember(req.user._id)) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
@@ -244,7 +244,10 @@ export const reorderTasks = async (req, res, next) => {
     // Broadcast to all project members
     const firstTask = await Task.findById(updates[0]?.id);
     if (firstTask) {
-      emitToProject(req.app.get('io'), firstTask.project.toString(), 'tasks:reordered', { updates });
+      emitToProject(req.app.get('io'), firstTask.project.toString(), 'tasks:reordered', { 
+        updates, 
+        projectId: firstTask.project.toString() 
+      });
     }
 
     res.json({ success: true });
@@ -257,8 +260,8 @@ export const deleteTask = async (req, res, next) => {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
 
-    const proj = await Project.findById(task.project);
-    if (!proj || !proj.isMember(req.user._id)) {
+    const proj = await Project.findById(task.project).populate('workspace');
+    if (!proj || !proj.workspace.isMember(req.user._id)) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
