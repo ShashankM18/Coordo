@@ -103,7 +103,7 @@ export default function InvitesPage() {
                     {invite.workspaceId?.name || 'Workspace'}
                   </h3>
                   <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <span className="truncate">Invited by user</span>
+                    <span className="truncate">Invited by {invite.invitedBy?.name}</span>
                   </div>
                 </div>
               </div>
