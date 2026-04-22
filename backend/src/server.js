@@ -49,14 +49,14 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // --- Rate Limiting ---
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { message: 'Too many requests, please try again later.' },
-});
-app.use('/api/', limiter);
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 200,
+//   standardHeaders: true,
+//   legacyHeaders: false,
+//   message: { message: 'Too many requests, please try again later.' },
+// });
+// app.use('/api/', limiter);
 
 // --- Socket.io Setup ---
 const io = new Server(httpServer, {
